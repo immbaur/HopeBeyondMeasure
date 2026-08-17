@@ -1,0 +1,81 @@
+<%- include('partials/head', { title: 'Meet the Children' }) %>
+
+<section class="hero">
+  <div class="container">
+    <h1>Every child has a dream.<br>You can help it come true.</h1>
+    <p class="hero-sub">
+      Meet the children we support. Each profile shares a story, a home, and a hope for
+      tomorrow — and each one is waiting for someone like you.
+    </p>
+  </div>
+</section>
+
+<section class="section section-blue">
+  <div class="container">
+    <% if (locations.length > 0) { %>
+      <form method="get" action="/" class="filter-bar" data-autosubmit>
+        <label>
+          <span>Region</span>
+          <select name="location">
+            <option value="">All regions</option>
+            <% for (const loc of locations) { %>
+              <option value="<%= loc %>" <%= loc === location ? 'selected' : '' %>><%= loc %></option>
+            <% } %>
+          </select>
+        </label>
+        <label>
+          <span>Sort by</span>
+          <select name="sort">
+            <option value="newest" <%= sort === 'newest' ? 'selected' : '' %>>Newest first</option>
+            <option value="youngest" <%= sort === 'youngest' ? 'selected' : '' %>>Youngest first</option>
+            <option value="oldest" <%= sort === 'oldest' ? 'selected' : '' %>>Oldest first</option>
+            <option value="name" <%= sort === 'name' ? 'selected' : '' %>>Name A–Z</option>
+          </select>
+        </label>
+        <noscript><button type="submit" class="btn btn-secondary">Apply</button></noscript>
+      </form>
+    <% } %>
+
+    <% if (profiles.length === 0) { %>
+      <div class="empty-state">
+        <h2>New stories are on their way</h2>
+        <p>We’re preparing the first profiles right now — please check back soon.</p>
+      </div>
+    <% } else { %>
+      <div class="card-grid">
+        <% for (const p of profiles) { %>
+          <a class="profile-card" href="/children/<%= p.id %>">
+            <div class="card-photo">
+              <% if (p.cover) { %>
+                <img src="/uploads/<%= p.cover %>" alt="Photo of <%= p.name %>" loading="lazy">
+              <% } else { %>
+                <div class="card-photo-placeholder">💙</div>
+              <% } %>
+            </div>
+            <div class="card-body">
+              <h3><%= p.name %><% if (p.age != null) { %>, <%= p.age %><% } %></h3>
+              <p class="card-location">📍 <%= p.location %></p>
+              <% if (p.aspiration) { %>
+                <p class="card-dream">Dreams of becoming <%= p.aspiration.toLowerCase() %></p>
+              <% } %>
+              <span class="btn btn-primary card-cta">View profile</span>
+            </div>
+          </a>
+        <% } %>
+      </div>
+    <% } %>
+  </div>
+</section>
+
+<section class="section section-cream">
+  <div class="container narrow center">
+    <p class="serif-quote">“Transforming lives. Building tomorrow.”</p>
+    <p>
+      Want to know more about our work before choosing a child to support?
+      Visit our main website to learn how sponsorship changes lives.
+    </p>
+    <a class="btn btn-primary" href="<%= mainSite %>" target="_blank" rel="noopener">About Hope Beyond Measure</a>
+  </div>
+</section>
+
+<%- include('partials/foot') %>

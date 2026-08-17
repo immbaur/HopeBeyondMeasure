@@ -1,0 +1,162 @@
+<%- include('../partials/head', { title: profile ? 'Edit ' + profile.name : 'New profile' }) %>
+
+<section class="section">
+  <div class="container narrow">
+    <a href="/admin/profiles" class="back-link">← All profiles</a>
+    <div class="admin-toolbar">
+      <h1><%= profile ? 'Edit ' + profile.name + '’s profile' : 'Create a new profile' %></h1>
+      <% if (profile) { %>
+        <div>
+          <span class="badge badge-<%= profile.status %>"><%= profile.status === 'published' ? 'Published' : 'Draft' %></span>
+        </div>
+      <% } %>
+    </div>
+
+    <% if (errors.length) { %>
+      <div class="flash flash-error">
+        <strong>Please fix the following before saving:</strong>
+        <ul><% for (const e of errors) { %><li><%= e %></li><% } %></ul>
+      </div>
+    <% } %>
+
+    <form method="post" action="<%= profile ? '/admin/profiles/' + profile.id : '/admin/profiles' %>" class="stacked-form">
+      <input type="hidden" name="_csrf" value="<%= csrf %>">
+
+      <fieldset>
+        <legend>1 · About the child</legend>
+        <label>First name <span class="req">*</span>
+          <small>First name only — surnames are never shown publicly.</small>
+          <input type="text" name="name" value="<%= values.name || '' %>" required>
+        </label>
+        <div class="form-row">
+          <label>Date of birth
+            <small>Only the age is shown publicly.</small>
+            <input type="date" name="date_of_birth" value="<%= values.date_of_birth || '' %>" max="<%= new Date().toISOString().slice(0,10) %>">
+          </label>
+          <label>…or age (if exact date is unknown)
+            <small>Enter one of the two.</small>
+            <input type="number" name="age_years" min="0" max="25" value="<%= values.age_years ?? '' %>">
+          </label>
+        </div>
+        <label>Location <span class="req">*</span>
+          <small>Region or town only — never an address or school name.</small>
+          <input type="text" name="location" value="<%= values.location || '' %>" placeholder="e.g. Kumasi Region" required>
+        </label>
+      </fieldset>
+
+      <fieldset>
+        <legend>2 · Their story</legend>
+        <label>Living situation
+          <small>Family composition, guardians, housing — in a few sentences.</small>
+          <textarea name="living_situation" rows="4"><%= values.living_situation || '' %></textarea>
+        </label>
+        <label>Family income
+          <small>Use a general range rather than exact figures.</small>
+          <input type="text" name="family_income" list="income-ranges" value="<%= values.family_income || '' %>" placeholder="e.g. Below $50 / month">
+          <datalist id="income-ranges">
+            <% for (const r of incomeRanges) { %><option value="<%= r %>"></option><% } %>
+          </datalist>
+        </label>
+        <label>Dream / aspiration
+          <small>What does the child want to become? (e.g. “a teacher”)</small>
+          <input type="text" name="aspiration" value="<%= values.aspiration || '' %>" placeholder="a teacher">
+        </label>
+      </fieldset>
+
+      <fieldset>
+        <legend>3 · Consent</legend>
+        <label class="checkbox-label">
+          <input type="checkbox" name="consent_recorded" value="1" <%= values.consent_recorded ? 'checked' : '' %>>
+          <span>
+            A parent or guardian has given <strong>documented consent</strong> to publish this
+            child’s photos and story on the internet.
+            <% if (profile && profile.consent_date) { %>
+              <small>Recorded on <%= profile.consent_date.slice(0, 10) %>. Unticking this takes the profile offline immediately.</small>
+            <% } else { %>
+              <small>Required before the profile can be published.</small>
+            <% } %>
+          </span>
+        </label>
+      </fieldset>
+
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary"><%= profile ? 'Save changes' : 'Create profile (as draft)' %></button>
+        <a href="/admin/profiles" class="btn btn-secondary">Cancel</a>
+      </div>
+    </form>
+
+    <% if (profile) { %>
+      <fieldset class="photos-fieldset">
+        <legend>4 · Photos</legend>
+        <p class="muted">
+          Photos are automatically resized for the web and all metadata (including GPS location)
+          is removed. Please make sure no school signs, house numbers, or street names are visible.
+        </p>
+
+        <% if (photos.length > 0) { %>
+          <div class="photo-grid">
+            <% photos.forEach((ph, i) => { %>
+              <div class="photo-tile">
+                <img src="/uploads/<%= ph.thumb_filename %>" alt="">
+                <% if (ph.is_cover) { %><span class="badge badge-cover">Cover</span><% } %>
+                <div class="photo-actions">
+                  <% if (!ph.is_cover) { %>
+                    <form method="post" action="/admin/photos/<%= ph.id %>/cover" class="inline-form">
+                      <input type="hidden" name="_csrf" value="<%= csrf %>">
+                      <button type="submit" class="btn btn-tiny btn-secondary" title="Use as cover photo">★ Cover</button>
+                    </form>
+                  <% } %>
+                  <form method="post" action="/admin/photos/<%= ph.id %>/move" class="inline-form">
+                    <input type="hidden" name="_csrf" value="<%= csrf %>">
+                    <input type="hidden" name="dir" value="up">
+                    <button type="submit" class="btn btn-tiny btn-secondary" <%= i === 0 ? 'disabled' : '' %> title="Move earlier">←</button>
+                  </form>
+                  <form method="post" action="/admin/photos/<%= ph.id %>/move" class="inline-form">
+                    <input type="hidden" name="_csrf" value="<%= csrf %>">
+                    <input type="hidden" name="dir" value="down">
+                    <button type="submit" class="btn btn-tiny btn-secondary" <%= i === photos.length - 1 ? 'disabled' : '' %> title="Move later">→</button>
+                  </form>
+                  <form method="post" action="/admin/photos/<%= ph.id %>/delete" class="inline-form"
+                        onsubmit="return confirm('Delete this photo?')">
+                    <input type="hidden" name="_csrf" value="<%= csrf %>">
+                    <button type="submit" class="btn btn-tiny btn-danger">✕</button>
+                  </form>
+                </div>
+              </div>
+            <% }) %>
+          </div>
+        <% } %>
+
+        <form method="post" action="/admin/profiles/<%= profile.id %>/photos" enctype="multipart/form-data" class="stacked-form upload-form">
+          <input type="hidden" name="_csrf" value="<%= csrf %>">
+          <label>Add photos <small>(JPG, PNG, or WebP — you can select several at once)</small>
+            <input type="file" name="photos" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" multiple required>
+          </label>
+          <button type="submit" class="btn btn-primary">Upload photos</button>
+        </form>
+      </fieldset>
+
+      <div class="publish-panel">
+        <% if (profile.status === 'published') { %>
+          <p>This profile is <strong>live</strong> on the public dashboard.</p>
+          <form method="post" action="/admin/profiles/<%= profile.id %>/unpublish" class="inline-form">
+            <input type="hidden" name="_csrf" value="<%= csrf %>">
+            <button type="submit" class="btn btn-secondary">Take offline</button>
+          </form>
+        <% } else { %>
+          <p>This profile is a <strong>draft</strong> — only organizers can see it.
+            <a href="/children/<%= profile.id %>">Preview it</a> before publishing.</p>
+          <form method="post" action="/admin/profiles/<%= profile.id %>/publish" class="inline-form">
+            <input type="hidden" name="_csrf" value="<%= csrf %>">
+            <button type="submit" class="btn btn-primary" <%= profile.consent_recorded ? '' : 'disabled title="Record consent above first"' %>>Publish profile</button>
+          </form>
+          <% if (!profile.consent_recorded) { %>
+            <p class="muted">Publishing is disabled until consent is recorded in section 3.</p>
+          <% } %>
+        <% } %>
+      </div>
+    <% } %>
+  </div>
+</section>
+
+<%- include('../partials/foot') %>

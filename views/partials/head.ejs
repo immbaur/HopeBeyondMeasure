@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= typeof title !== 'undefined' && title ? title + ' — ' : '' %>Hope Beyond Measure</title>
+  <meta name="description" content="Meet the children of Hope Beyond Measure and help restore hope through sponsorship.">
+  <link rel="preconnect" href="https://api.fontshare.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://api.fontshare.com/v2/css?f[]=general-sans@500,600,700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=PT+Serif:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💙</text></svg>">
+</head>
+<body>
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="wordmark" href="/">
+      <span class="wordmark-mark">💙</span>
+      <span>Hope<span class="wordmark-accent">Beyond</span>Measure</span>
+    </a>
+    <nav class="site-nav">
+      <a href="/" class="nav-link">Meet the Children</a>
+      <a href="<%= mainSite %>" class="nav-link" target="_blank" rel="noopener">Main Website ↗</a>
+      <% if (user) { %>
+        <a href="/admin/profiles" class="nav-link nav-admin">Manage</a>
+        <form method="post" action="/admin/logout" class="inline-form">
+          <input type="hidden" name="_csrf" value="<%= csrf %>">
+          <button type="submit" class="nav-link nav-button">Log out</button>
+        </form>
+      <% } %>
+    </nav>
+  </div>
+</header>
+<% if (flash) { %>
+  <div class="container"><div class="flash flash-<%= flash.type %>"><%= flash.message %></div></div>
+<% } %>

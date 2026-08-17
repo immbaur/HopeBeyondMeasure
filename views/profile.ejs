@@ -1,0 +1,77 @@
+<%- include('partials/head', { title: profile.name }) %>
+
+<% if (isPreview) { %>
+  <div class="container"><div class="flash flash-info">
+    Draft preview — this profile is <strong>not</strong> visible to the public yet.
+  </div></div>
+<% } %>
+
+<section class="section">
+  <div class="container">
+    <a href="/" class="back-link">← Back to all children</a>
+
+    <div class="profile-layout">
+      <div class="profile-gallery">
+        <% if (photos.length > 0) { %>
+          <div class="gallery" data-gallery>
+            <div class="gallery-main">
+              <img src="/uploads/<%= photos[0].filename %>" alt="Photo of <%= profile.name %>" data-gallery-main>
+              <% if (photos.length > 1) { %>
+                <button class="gallery-nav gallery-prev" type="button" data-gallery-prev aria-label="Previous photo">‹</button>
+                <button class="gallery-nav gallery-next" type="button" data-gallery-next aria-label="Next photo">›</button>
+              <% } %>
+            </div>
+            <% if (photos.length > 1) { %>
+              <div class="gallery-thumbs">
+                <% photos.forEach((ph, i) => { %>
+                  <button type="button" class="gallery-thumb <%= i === 0 ? 'active' : '' %>"
+                          data-full="/uploads/<%= ph.filename %>" data-index="<%= i %>">
+                    <img src="/uploads/<%= ph.thumb_filename %>" alt="" loading="lazy">
+                  </button>
+                <% }) %>
+              </div>
+            <% } %>
+          </div>
+        <% } else { %>
+          <div class="card-photo-placeholder gallery-placeholder">💙</div>
+        <% } %>
+      </div>
+
+      <div class="profile-details">
+        <h1><%= profile.name %><% if (age != null) { %>, <span class="age"><%= age %> years old</span><% } %></h1>
+        <p class="profile-location">📍 <%= profile.location %></p>
+
+        <% if (profile.aspiration) { %>
+          <blockquote class="serif-quote profile-dream">
+            “When I grow up, I want to be <%= profile.aspiration.toLowerCase() %>.”
+          </blockquote>
+        <% } %>
+
+        <% if (profile.living_situation) { %>
+          <div class="detail-block">
+            <h2>Living situation</h2>
+            <p><%= profile.living_situation %></p>
+          </div>
+        <% } %>
+
+        <% if (profile.family_income) { %>
+          <div class="detail-block">
+            <h2>Family income</h2>
+            <p><%= profile.family_income %></p>
+          </div>
+        <% } %>
+
+        <div class="sponsor-box">
+          <h2>Would you like to support <%= profile.name %>?</h2>
+          <p>
+            Reach out through our main website and mention <%= profile.name %> from
+            <%= profile.location %> — we’ll take it from there.
+          </p>
+          <a class="btn btn-primary" href="<%= mainSite %>" target="_blank" rel="noopener">Get in touch</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<%- include('partials/foot') %>

@@ -1,0 +1,21 @@
+<%- include('../partials/head', { title: 'Organizer login' }) %>
+
+<section class="section">
+  <div class="container auth-card">
+    <h1>Organizer login</h1>
+    <% if (error) { %><div class="flash flash-error"><%= error %></div><% } %>
+    <form method="post" action="/admin/login" class="stacked-form">
+      <input type="hidden" name="_csrf" value="<%= csrf %>">
+      <label>Email address
+        <input type="email" name="email" value="<%= email %>" required autofocus>
+      </label>
+      <label>Password
+        <input type="password" name="password" required>
+      </label>
+      <button type="submit" class="btn btn-primary">Log in</button>
+    </form>
+    <p class="auth-alt"><a href="/admin/forgot">Forgot your password?</a></p>
+  </div>
+</section>
+
+<%- include('../partials/foot') %>

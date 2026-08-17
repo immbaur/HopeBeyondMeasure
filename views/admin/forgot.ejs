@@ -1,0 +1,26 @@
+<%- include('../partials/head', { title: 'Reset password' }) %>
+
+<section class="section">
+  <div class="container auth-card">
+    <h1>Reset your password</h1>
+    <% if (sent) { %>
+      <div class="flash flash-success">
+        If an account exists for that address, a reset link has been sent.
+        (If email isn’t configured on the server, the link appears in the server console.)
+      </div>
+      <p class="auth-alt"><a href="/admin/login">Back to login</a></p>
+    <% } else { %>
+      <p>Enter your organizer email and we’ll send you a link to choose a new password.</p>
+      <form method="post" action="/admin/forgot" class="stacked-form">
+        <input type="hidden" name="_csrf" value="<%= csrf %>">
+        <label>Email address
+          <input type="email" name="email" required autofocus>
+        </label>
+        <button type="submit" class="btn btn-primary">Send reset link</button>
+      </form>
+      <p class="auth-alt"><a href="/admin/login">Back to login</a></p>
+    <% } %>
+  </div>
+</section>
+
+<%- include('../partials/foot') %>

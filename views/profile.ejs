@@ -8,7 +8,16 @@
 
 <section class="section">
   <div class="container">
-    <a href="/" class="back-link">← Back to all children</a>
+    <% if (isOrganizer) { %>
+      <div class="admin-toolbar">
+        <a href="/admin/profiles" class="back-link">← Back to all profiles</a>
+        <div class="admin-toolbar-actions">
+          <a href="/admin/profiles/<%= profile.id %>/edit" class="btn btn-primary">Edit profile</a>
+        </div>
+      </div>
+    <% } else { %>
+      <a href="/" class="back-link">← Back to all children</a>
+    <% } %>
 
     <div class="profile-layout">
       <div class="profile-gallery">

@@ -10,20 +10,19 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://api.fontshare.com/v2/css?f[]=general-sans@500,600,700&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=PT+Serif:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/styles.css">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💙</text></svg>">
+  <link rel="stylesheet" href="/static/styles.css?v=8">
+  <link rel="icon" type="image/png" href="/static/favicon.png">
 </head>
 <body>
 <header class="site-header">
   <div class="container header-inner">
     <a class="wordmark" href="/">
-      <span class="wordmark-mark">💙</span>
-      <span>Hope<span class="wordmark-accent">Beyond</span>Measure</span>
+      <img src="/static/images/logo.png" alt="Hope Beyond Measure" class="wordmark-logo">
     </a>
     <nav class="site-nav">
       <a href="/" class="nav-link">Meet the Children</a>
       <a href="<%= mainSite %>" class="nav-link" target="_blank" rel="noopener">Main Website ↗</a>
-      <% if (user) { %>
+      <% if (isOrganizer) { %>
         <a href="/admin/profiles" class="nav-link nav-admin">Manage</a>
         <form method="post" action="/admin/logout" class="inline-form">
           <input type="hidden" name="_csrf" value="<%= csrf %>">

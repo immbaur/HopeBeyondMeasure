@@ -12,7 +12,7 @@ const crypto = require('node:crypto');
 const express = require('express');
 const cookieSession = require('cookie-session');
 
-const { db, DATA_DIR, UPLOADS_DIR } = require('./src/db');
+const { DATA_DIR, UPLOADS_DIR } = require('./src/db');
 const publicRoutes = require('./src/routes/public');
 const adminRoutes = require('./src/routes/admin');
 
@@ -43,12 +43,9 @@ app.use(
   })
 );
 
-// Current user + CSRF token for every view; validate CSRF on form posts.
+// Organizer access + CSRF token for every view; validate CSRF on form posts.
 app.use((req, res, next) => {
-  res.locals.user = req.session.userId
-    ? db.prepare('SELECT id, email, name FROM users WHERE id = ?').get(req.session.userId) || null
-    : null;
-  if (!res.locals.user) req.session.userId = null;
+  res.locals.isOrganizer = Boolean(req.session.adminUnlocked);
 
   if (!req.session.csrf) req.session.csrf = crypto.randomBytes(24).toString('hex');
   res.locals.csrf = req.session.csrf;
@@ -76,8 +73,7 @@ app.use((err, req, res, next) => {
 
 app.listen(PORT, () => {
   console.log(`Hope Beyond Measure dashboard running at http://localhost:${PORT}`);
-  const hasUsers = db.prepare('SELECT COUNT(*) AS n FROM users').get().n > 0;
-  if (!hasUsers) {
-    console.log(`First run: open http://localhost:${PORT}/admin/setup to create the organizer account.`);
+  if (!process.env.ADMIN_PASSWORD) {
+    console.log('ADMIN_PASSWORD is not set — /admin is unreachable until it is configured in .env.');
   }
 });

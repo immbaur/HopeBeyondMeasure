@@ -155,6 +155,15 @@
           <% } %>
         <% } %>
       </div>
+
+      <div class="danger-zone">
+        <p><strong>Delete this profile</strong> — removes it and all photos permanently. This cannot be undone.</p>
+        <form method="post" action="/admin/profiles/<%= profile.id %>/delete" class="inline-form"
+              onsubmit="return confirm('Delete <%= profile.name %>’s profile and all photos? This cannot be undone.')">
+          <input type="hidden" name="_csrf" value="<%= csrf %>">
+          <button type="submit" class="btn btn-danger">Delete profile</button>
+        </form>
+      </div>
     <% } %>
   </div>
 </section>

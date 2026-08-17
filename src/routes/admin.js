@@ -1,13 +1,10 @@
 'use strict';
 
-const crypto = require('node:crypto');
 const express = require('express');
-const bcrypt = require('bcryptjs');
 const multer = require('multer');
 const { db, photosOf } = require('../db');
 const { ageOf, INCOME_RANGES } = require('../util');
 const { processUpload, deleteFiles, ALLOWED_MIME } = require('../images');
-const { sendPasswordReset } = require('../mailer');
 
 const router = express.Router();
 
@@ -22,57 +19,25 @@ function flash(req, type, message) {
 }
 
 function requireAuth(req, res, next) {
-  if (!res.locals.user) return res.redirect('/admin/login');
+  if (!res.locals.isOrganizer) return res.redirect(`/admin/login?next=${encodeURIComponent(req.originalUrl)}`);
   next();
 }
 
-function hasUsers() {
-  return db.prepare('SELECT COUNT(*) AS n FROM users').get().n > 0;
-}
-
-// ---------- First-run setup (creates the first organizer account) ----------
-
-router.get('/setup', (req, res) => {
-  if (hasUsers()) return res.redirect('/admin/login');
-  res.render('admin/setup', { error: null, values: {} });
-});
-
-router.post('/setup', async (req, res) => {
-  if (hasUsers()) return res.redirect('/admin/login');
-  const { name = '', email = '', password = '' } = req.body;
-  const error = !name.trim() || !email.includes('@')
-    ? 'Please enter a name and a valid email address.'
-    : password.length < 10
-      ? 'Please choose a password of at least 10 characters.'
-      : null;
-  if (error) return res.status(422).render('admin/setup', { error, values: { name, email } });
-
-  const hash = await bcrypt.hash(password, 12);
-  const result = db
-    .prepare('INSERT INTO users (email, name, password_hash) VALUES (?, ?, ?)')
-    .run(email.trim().toLowerCase(), name.trim(), hash);
-  req.session.userId = Number(result.lastInsertRowid);
-  flash(req, 'success', 'Welcome! Your organizer account is ready.');
-  res.redirect('/admin/profiles');
-});
-
-// ---------- Login / logout / password reset ----------
+// ---------- Login / logout ----------
 
 router.get('/login', (req, res) => {
-  if (!hasUsers()) return res.redirect('/admin/setup');
-  if (res.locals.user) return res.redirect('/admin/profiles');
-  res.render('admin/login', { error: null, email: '' });
+  const next = typeof req.query.next === 'string' ? req.query.next : '/admin/profiles';
+  if (res.locals.isOrganizer) return res.redirect(next);
+  res.render('admin/login', { error: null, next });
 });
 
-router.post('/login', async (req, res) => {
-  const { email = '', password = '' } = req.body;
-  const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email.trim().toLowerCase());
-  const ok = user && (await bcrypt.compare(password, user.password_hash));
-  if (!ok) {
-    return res.status(401).render('admin/login', { error: 'Wrong email or password.', email });
+router.post('/login', (req, res) => {
+  const next = typeof req.body.next === 'string' ? req.body.next : '/admin/profiles';
+  if (!process.env.ADMIN_PASSWORD || req.body.password !== process.env.ADMIN_PASSWORD) {
+    return res.status(401).render('admin/login', { error: 'Incorrect password.', next });
   }
-  req.session.userId = user.id;
-  res.redirect('/admin/profiles');
+  req.session.adminUnlocked = true;
+  res.redirect(next);
 });
 
 router.post('/logout', (req, res) => {
@@ -80,55 +45,7 @@ router.post('/logout', (req, res) => {
   res.redirect('/');
 });
 
-router.get('/forgot', (req, res) => res.render('admin/forgot', { sent: false }));
-
-router.post('/forgot', async (req, res) => {
-  const email = (req.body.email || '').trim().toLowerCase();
-  const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
-  if (user) {
-    const token = crypto.randomBytes(32).toString('hex');
-    db.prepare(
-      "INSERT INTO password_resets (token, user_id, expires_at) VALUES (?, ?, datetime('now', '+1 hour'))"
-    ).run(token, user.id);
-    const base = process.env.PUBLIC_URL || `${req.protocol}://${req.get('host')}`;
-    await sendPasswordReset(email, `${base}/admin/reset/${token}`).catch((err) =>
-      console.error('Failed to send reset email:', err.message)
-    );
-  }
-  // Same response whether or not the account exists.
-  res.render('admin/forgot', { sent: true });
-});
-
-function validResetToken(token) {
-  return db
-    .prepare("SELECT * FROM password_resets WHERE token = ? AND expires_at > datetime('now')")
-    .get(token);
-}
-
-router.get('/reset/:token', (req, res) => {
-  if (!validResetToken(req.params.token)) return res.status(404).render('404');
-  res.render('admin/reset', { token: req.params.token, error: null });
-});
-
-router.post('/reset/:token', async (req, res) => {
-  const reset = validResetToken(req.params.token);
-  if (!reset) return res.status(404).render('404');
-  const password = req.body.password || '';
-  if (password.length < 10) {
-    return res.status(422).render('admin/reset', {
-      token: req.params.token,
-      error: 'Please choose a password of at least 10 characters.',
-    });
-  }
-  const hash = await bcrypt.hash(password, 12);
-  db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(hash, reset.user_id);
-  db.prepare('DELETE FROM password_resets WHERE user_id = ?').run(reset.user_id);
-  req.session.userId = reset.user_id;
-  flash(req, 'success', 'Your password has been updated.');
-  res.redirect('/admin/profiles');
-});
-
-// ---------- Everything below requires a logged-in organizer (FR-12) ----------
+// ---------- Everything below requires the admin password (FR-12) ----------
 
 router.use(requireAuth);
 
@@ -388,44 +305,6 @@ router.post('/photos/:id(\\d+)/move', (req, res) => {
     db.prepare('UPDATE photos SET position = ? WHERE id = ?').run(photo.position, neighbor.id);
   }
   res.redirect(`/admin/profiles/${photo.profile_id}/edit`);
-});
-
-// ---------- Organizer accounts (FR-13) ----------
-
-router.get('/organizers', (req, res) => {
-  const organizers = db.prepare('SELECT id, email, name, created_at FROM users ORDER BY name').all();
-  res.render('admin/organizers', { organizers, error: null, values: {} });
-});
-
-router.post('/organizers', async (req, res) => {
-  const { name = '', email = '', password = '' } = req.body;
-  let error = null;
-  if (!name.trim() || !email.includes('@')) error = 'Please enter a name and a valid email address.';
-  else if (password.length < 10) error = 'Please choose a password of at least 10 characters.';
-  else if (db.prepare('SELECT 1 FROM users WHERE email = ?').get(email.trim().toLowerCase())) {
-    error = 'An organizer with this email already exists.';
-  }
-  if (error) {
-    const organizers = db.prepare('SELECT id, email, name, created_at FROM users ORDER BY name').all();
-    return res.status(422).render('admin/organizers', { organizers, error, values: { name, email } });
-  }
-  const hash = await bcrypt.hash(password, 12);
-  db.prepare('INSERT INTO users (email, name, password_hash) VALUES (?, ?, ?)').run(
-    email.trim().toLowerCase(), name.trim(), hash
-  );
-  flash(req, 'success', `Organizer account for ${name.trim()} created.`);
-  res.redirect('/admin/organizers');
-});
-
-router.post('/organizers/:id(\\d+)/delete', (req, res) => {
-  const id = Number(req.params.id);
-  if (id === res.locals.user.id) {
-    flash(req, 'error', 'You cannot delete your own account while logged in.');
-  } else {
-    db.prepare('DELETE FROM users WHERE id = ?').run(id);
-    flash(req, 'success', 'Organizer account removed.');
-  }
-  res.redirect('/admin/organizers');
 });
 
 module.exports = router;

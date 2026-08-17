@@ -15,7 +15,28 @@ const COVER_SQL = `
   WHERE p.status = 'published'
 `;
 
-router.get('/', (req, res) => {
+function requireGateAccess(req, res, next) {
+  const sitePassword = process.env.SITE_PASSWORD;
+  if (!sitePassword || req.session.galleryUnlocked || res.locals.isOrganizer) return next();
+  res.redirect(`/unlock?next=${encodeURIComponent(req.originalUrl)}`);
+}
+
+router.get('/unlock', (req, res) => {
+  const next = typeof req.query.next === 'string' ? req.query.next : '/';
+  if (!process.env.SITE_PASSWORD || req.session.galleryUnlocked) return res.redirect(next);
+  res.render('unlock', { error: null, next });
+});
+
+router.post('/unlock', (req, res) => {
+  const next = typeof req.body.next === 'string' ? req.body.next : '/';
+  if (req.body.password === process.env.SITE_PASSWORD) {
+    req.session.galleryUnlocked = true;
+    return res.redirect(next);
+  }
+  res.status(401).render('unlock', { error: 'Incorrect password.', next });
+});
+
+router.get('/', requireGateAccess, (req, res) => {
   let profiles = db.prepare(COVER_SQL).all();
   profiles.forEach((p) => (p.age = ageOf(p)));
 
@@ -36,10 +57,10 @@ router.get('/', (req, res) => {
   res.render('dashboard', { profiles, locations, location, sort });
 });
 
-router.get('/children/:id(\\d+)', (req, res) => {
+router.get('/children/:id(\\d+)', requireGateAccess, (req, res) => {
   const profile = db.prepare('SELECT * FROM profiles WHERE id = ?').get(req.params.id);
   // Organizers may preview drafts; visitors only see published profiles (FR-12 side).
-  if (!profile || (profile.status !== 'published' && !res.locals.user)) {
+  if (!profile || (profile.status !== 'published' && !res.locals.isOrganizer)) {
     return res.status(404).render('404');
   }
   res.render('profile', {

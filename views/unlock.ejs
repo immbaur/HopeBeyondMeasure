@@ -1,19 +1,19 @@
-<%- include('../partials/head', { title: 'Organizer login' }) %>
+<%- include('partials/head', { title: 'Enter password' }) %>
 
 <section class="section">
   <div class="container auth-card">
-    <h1>Organizer login</h1>
-    <p>Enter the shared organizer password to create and manage profiles.</p>
+    <h1>This dashboard is password-protected</h1>
+    <p>Enter the password shared with you to view the children we support.</p>
     <% if (error) { %><div class="flash flash-error"><%= error %></div><% } %>
-    <form method="post" action="/admin/login" class="stacked-form">
+    <form method="post" action="/unlock" class="stacked-form">
       <input type="hidden" name="_csrf" value="<%= csrf %>">
       <input type="hidden" name="next" value="<%= next %>">
       <label>Password
         <input type="password" name="password" required autofocus>
       </label>
-      <button type="submit" class="btn btn-primary">Log in</button>
+      <button type="submit" class="btn btn-primary">View profiles</button>
     </form>
   </div>
 </section>
 
-<%- include('../partials/foot') %>
+<%- include('partials/foot') %>

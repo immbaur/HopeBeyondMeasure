@@ -13,9 +13,9 @@ npm install
 npm start
 ```
 
-Open <http://localhost:3000>. On first run you'll be guided to
-`/admin/setup` to create the first organizer account. Everything the app stores
-(SQLite database + photos) lives in `./data/`.
+Open <http://localhost:3000>. Set `ADMIN_PASSWORD` (and optionally `SITE_PASSWORD`)
+in `.env` — see [.env.example](.env.example) — before `/admin` is reachable.
+Everything the app stores (SQLite database + photos) lives in `./data/`.
 
 `npm run dev` starts with auto-reload during development.
 
@@ -57,9 +57,8 @@ cloudflared tunnel --url http://localhost:3000
   parent/guardian consent box. New profiles start as **drafts** (invisible to the
   public, previewable by organizers). Unticking consent or clicking
   “Take offline” unpublishes immediately.
-- **More organizers** — “Manage” → “Organizers”.
-- **Password reset** — via “Forgot your password?” on the login page. If SMTP is
-  not configured in `.env`, the reset link is printed to the server console.
+- **Access** — there are no individual organizer accounts. Anyone with the shared
+  `ADMIN_PASSWORD` (set in `.env`) can log in at `/admin/login` and manage profiles.
 
 ## Backups
 
@@ -74,8 +73,8 @@ archive back into `data/`.
 
 ## Configuration
 
-All optional — see [.env.example](.env.example) for SMTP (password-reset emails),
-`PUBLIC_URL`, `PORT`, and `DATA_DIR`.
+See [.env.example](.env.example) for `ADMIN_PASSWORD`, `SITE_PASSWORD`, `PORT`,
+and `DATA_DIR`. `ADMIN_PASSWORD` must be set for `/admin` to be reachable.
 
 ## Child safeguarding notes (see REQUIREMENTS.md §6)
 

@@ -1,0 +1,22 @@
+# systemd unit for the Hope Beyond Measure dashboard.
+# Install: sudo cp deploy/hopebeyondmeasure.service /etc/systemd/system/
+#          sudo systemctl daemon-reload && sudo systemctl enable --now hopebeyondmeasure
+[Unit]
+Description=Hope Beyond Measure dashboard
+After=network.target
+
+[Service]
+User=hopebeyondmeasure
+WorkingDirectory=/home/hopebeyondmeasure/HopeBeyondMeasure
+ExecStart=/usr/bin/node server.js
+Restart=on-failure
+RestartSec=3
+
+# Secrets and settings live in /etc/hopebeyondmeasure.env (chmod 600), not here.
+EnvironmentFile=/etc/hopebeyondmeasure.env
+# Only reachable through the local reverse proxy (Caddy).
+Environment=HOST=127.0.0.1
+Environment=PORT=3002
+
+[Install]
+WantedBy=multi-user.target

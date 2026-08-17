@@ -1,0 +1,64 @@
+name: Deploy Hope Beyond Measure
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+# Never let two deploys overlap; a newer push supersedes an in-flight one.
+concurrency:
+  group: deploy-hopebeyondmeasure
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Deploy to droplet
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+
+      - name: Configure SSH
+        env:
+          DROPLET_HOST: ${{ secrets.DROPLET_HOST }}
+          DROPLET_SSH_KEY: ${{ secrets.DROPLET_SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "$DROPLET_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H "$DROPLET_HOST" >> ~/.ssh/known_hosts
+
+      # Write the app's runtime secrets to /etc/hopebeyondmeasure.env on the
+      # droplet. The file is piped over stdin (not passed as arguments) so
+      # secret values never appear in any process listing. This makes GitHub
+      # the single source of truth for both passwords.
+      - name: Sync secrets to /etc/hopebeyondmeasure.env
+        env:
+          DROPLET_HOST: ${{ secrets.DROPLET_HOST }}
+          DROPLET_USER: ${{ secrets.DROPLET_USER }}
+          SITE_PASSWORD: ${{ secrets.SITE_PASSWORD }}
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+        run: |
+          if [ -z "$ADMIN_PASSWORD" ]; then
+            echo "::error::ADMIN_PASSWORD secret is not set"; exit 1
+          fi
+          umask 077
+          {
+            printf 'ADMIN_PASSWORD=%s\n' "$ADMIN_PASSWORD"
+            [ -n "$SITE_PASSWORD" ] && printf 'SITE_PASSWORD=%s\n' "$SITE_PASSWORD"
+          } > hopebeyondmeasure.env
+          ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes "$DROPLET_USER@$DROPLET_HOST" \
+            'umask 077 && cat > /etc/hopebeyondmeasure.env && chown root:root /etc/hopebeyondmeasure.env && chmod 600 /etc/hopebeyondmeasure.env' \
+            < hopebeyondmeasure.env
+          rm -f hopebeyondmeasure.env
+
+      - name: Deploy code and restart service
+        env:
+          DROPLET_HOST: ${{ secrets.DROPLET_HOST }}
+          DROPLET_USER: ${{ secrets.DROPLET_USER }}
+        run: |
+          ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes "$DROPLET_USER@$DROPLET_HOST" \
+            'bash -s' < deploy/remote-deploy.sh

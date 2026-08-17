@@ -45,6 +45,14 @@ npm start
 cloudflared tunnel --url http://localhost:3000
 ```
 
+## Hosting it permanently (DigitalOcean)
+
+The Cloudflare Tunnel above is fine for occasional use, but for a stable
+24/7 HTTPS URL, deploy to a DigitalOcean droplet — it can share an existing
+droplet (e.g. one already serving a static site via Caddy) on its own
+subdomain, without disturbing what's there. See
+[`deploy/DIGITALOCEAN.md`](deploy/DIGITALOCEAN.md).
+
 ## Organizer guide
 
 - **Create a profile** — “Manage” → “+ New profile”. Only first name and

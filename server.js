@@ -18,6 +18,11 @@ const adminRoutes = require('./src/routes/admin');
 
 const app = express();
 const PORT = Number(process.env.PORT || 3000);
+// HOST=127.0.0.1 keeps the app reachable only through a local reverse proxy
+// (Caddy) in production; defaults to all interfaces for local dev.
+const HOST = process.env.HOST || '0.0.0.0';
+
+app.get('/healthz', (req, res) => res.status(200).send('ok'));
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
@@ -71,8 +76,8 @@ app.use((err, req, res, next) => {
   res.status(500).send('Something went wrong. Please try again.');
 });
 
-app.listen(PORT, () => {
-  console.log(`Hope Beyond Measure dashboard running at http://localhost:${PORT}`);
+app.listen(PORT, HOST, () => {
+  console.log(`Hope Beyond Measure dashboard running at http://${HOST}:${PORT}`);
   if (!process.env.ADMIN_PASSWORD) {
     console.log('ADMIN_PASSWORD is not set — /admin is unreachable until it is configured in .env.');
   }

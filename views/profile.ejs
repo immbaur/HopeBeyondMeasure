@@ -12,6 +12,12 @@
       <div class="admin-toolbar">
         <a href="/admin/profiles" class="back-link">← Back to all profiles</a>
         <div class="admin-toolbar-actions">
+          <% if (profile.family_income || profile.organizer_notes) { %>
+            <div class="view-toggle" data-view-toggle>
+              <button type="button" class="view-toggle-btn active" data-view-btn="organizer">Organizer view</button>
+              <button type="button" class="view-toggle-btn" data-view-btn="sponsor">Sponsor view</button>
+            </div>
+          <% } %>
           <a href="/admin/profiles/<%= profile.id %>/edit" class="btn btn-primary">Edit profile</a>
         </div>
       </div>
@@ -58,28 +64,48 @@
 
         <% if (profile.living_situation) { %>
           <div class="detail-block">
-            <h2>Living situation</h2>
+            <h2>Their Story</h2>
             <p><%= profile.living_situation %></p>
           </div>
         <% } %>
 
-        <% if (profile.family_income) { %>
+        <% if (profile.support_note) { %>
           <div class="detail-block">
-            <h2>Family income</h2>
-            <p><%= profile.family_income %></p>
+            <h2>How Your Support Helps</h2>
+            <p><%= profile.support_note %></p>
           </div>
         <% } %>
 
         <div class="sponsor-box">
-          <h2>Would you like to support <%= profile.name %>?</h2>
+          <h2>Sponsor <%= profile.name %></h2>
           <p>
             Reach out through our main website and mention <%= profile.name %> from
             <%= profile.location %> — we’ll take it from there.
           </p>
-          <a class="btn btn-primary" href="<%= mainSite %>" target="_blank" rel="noopener">Get in touch</a>
+          <a class="btn btn-primary" href="<%= mainSite %>" target="_blank" rel="noopener">Sponsor <%= profile.name %></a>
         </div>
       </div>
     </div>
+
+    <% if (isOrganizer && (profile.family_income || profile.organizer_notes)) { %>
+      <div class="organizer-only" data-organizer-only>
+        <p class="organizer-only-label">Organizer only — not shown to sponsors</p>
+        <div class="organizer-only-fields">
+          <% if (profile.family_income) { %>
+            <div class="detail-block">
+              <h3>Family income</h3>
+              <p><%= profile.family_income %></p>
+            </div>
+          <% } %>
+          <% if (profile.organizer_notes) { %>
+            <div class="detail-block">
+              <h3>Organizer notes</h3>
+              <p><%= profile.organizer_notes %></p>
+            </div>
+          <% } %>
+        </div>
+      </div>
+    <% } %>
   </div>
 </section>
 

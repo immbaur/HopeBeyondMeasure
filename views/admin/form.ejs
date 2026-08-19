@@ -46,10 +46,23 @@
 
       <fieldset>
         <legend>2 · Their story</legend>
-        <label>Living situation
-          <small>Family composition, guardians, housing — in a few sentences.</small>
+        <label>Their story
+          <small>Family composition, guardians, housing — in a few sentences. Shown publicly as “Their Story.”</small>
           <textarea name="living_situation" rows="4"><%= values.living_situation || '' %></textarea>
         </label>
+        <label>Dream / aspiration
+          <small>What does the child want to become? (e.g. “a teacher”)</small>
+          <input type="text" name="aspiration" value="<%= values.aspiration || '' %>" placeholder="a teacher">
+        </label>
+        <label>How your support helps
+          <small>What a sponsorship pays for, specific to this child (e.g. “Covers school fees, a uniform, and daily meals.”). Shown publicly before the sponsor button.</small>
+          <textarea name="support_note" rows="3"><%= values.support_note || '' %></textarea>
+        </label>
+      </fieldset>
+
+      <fieldset>
+        <legend>3 · Organizer-only notes</legend>
+        <p class="muted">Visible to organizers on the profile page; never shown on the public dashboard or profile.</p>
         <label>Family income
           <small>Use a general range rather than exact figures.</small>
           <input type="text" name="family_income" list="income-ranges" value="<%= values.family_income || '' %>" placeholder="e.g. Below $50 / month">
@@ -57,14 +70,14 @@
             <% for (const r of incomeRanges) { %><option value="<%= r %>"></option><% } %>
           </datalist>
         </label>
-        <label>Dream / aspiration
-          <small>What does the child want to become? (e.g. “a teacher”)</small>
-          <input type="text" name="aspiration" value="<%= values.aspiration || '' %>" placeholder="a teacher">
+        <label>Organizer notes
+          <small>Anything else worth flagging for other organizers — sensitive details, follow-ups, background context.</small>
+          <textarea name="organizer_notes" rows="3"><%= values.organizer_notes || '' %></textarea>
         </label>
       </fieldset>
 
       <fieldset>
-        <legend>3 · Consent</legend>
+        <legend>4 · Consent</legend>
         <label class="checkbox-label">
           <input type="checkbox" name="consent_recorded" value="1" <%= values.consent_recorded ? 'checked' : '' %>>
           <span>
@@ -87,7 +100,7 @@
 
     <% if (profile) { %>
       <fieldset class="photos-fieldset">
-        <legend>4 · Photos</legend>
+        <legend>5 · Photos</legend>
         <p class="muted">
           Photos are automatically resized for the web and all metadata (including GPS location)
           is removed. Please make sure no school signs, house numbers, or street names are visible.

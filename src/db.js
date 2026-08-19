@@ -23,6 +23,8 @@ db.exec(`
     living_situation TEXT,
     family_income TEXT,
     aspiration TEXT,
+    support_note TEXT,
+    organizer_notes TEXT,
     status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft','published')),
     consent_recorded INTEGER NOT NULL DEFAULT 0,
     consent_date TEXT,
@@ -42,6 +44,16 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_photos_profile ON photos(profile_id, position);
   CREATE INDEX IF NOT EXISTS idx_profiles_status ON profiles(status);
 `);
+
+// Migrations: add columns to profiles created before they existed.
+const profileColumns = db.prepare('PRAGMA table_info(profiles)').all();
+const hasColumn = (name) => profileColumns.some((c) => c.name === name);
+if (!hasColumn('support_note')) {
+  db.exec('ALTER TABLE profiles ADD COLUMN support_note TEXT');
+}
+if (!hasColumn('organizer_notes')) {
+  db.exec('ALTER TABLE profiles ADD COLUMN organizer_notes TEXT');
+}
 
 /** Photos of a profile, cover first, then by manual order. */
 function photosOf(profileId) {

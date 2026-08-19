@@ -78,6 +78,8 @@ function profileFromForm(body) {
     living_situation: (body.living_situation || '').trim() || null,
     family_income: (body.family_income || '').trim() || null,
     aspiration: (body.aspiration || '').trim() || null,
+    support_note: (body.support_note || '').trim() || null,
+    organizer_notes: (body.organizer_notes || '').trim() || null,
     consent_recorded: body.consent_recorded ? 1 : 0,
   };
 }
@@ -127,13 +129,13 @@ router.post('/profiles', (req, res) => {
     .prepare(
       `INSERT INTO profiles
         (name, date_of_birth, age_years, location, living_situation, family_income, aspiration,
-         consent_recorded, consent_date)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, CASE WHEN ? THEN datetime('now') ELSE NULL END)`
+         support_note, organizer_notes, consent_recorded, consent_date)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CASE WHEN ? THEN datetime('now') ELSE NULL END)`
     )
     .run(
       values.name, values.date_of_birth, values.age_years, values.location,
-      values.living_situation, values.family_income, values.aspiration,
-      values.consent_recorded, values.consent_recorded
+      values.living_situation, values.family_income, values.aspiration, values.support_note,
+      values.organizer_notes, values.consent_recorded, values.consent_recorded
     );
   flash(req, 'success', `${values.name}’s profile was created as a draft. You can add photos now.`);
   res.redirect(`/admin/profiles/${result.lastInsertRowid}/edit`);
@@ -176,7 +178,7 @@ router.post('/profiles/:id(\\d+)', (req, res) => {
   db.prepare(
     `UPDATE profiles SET
        name = ?, date_of_birth = ?, age_years = ?, location = ?, living_situation = ?,
-       family_income = ?, aspiration = ?, consent_recorded = ?,
+       family_income = ?, aspiration = ?, support_note = ?, organizer_notes = ?, consent_recorded = ?,
        consent_date = CASE
          WHEN ? = 0 THEN NULL
          WHEN consent_date IS NULL THEN datetime('now')
@@ -185,8 +187,8 @@ router.post('/profiles/:id(\\d+)', (req, res) => {
      WHERE id = ?`
   ).run(
     values.name, values.date_of_birth, values.age_years, values.location,
-    values.living_situation, values.family_income, values.aspiration,
-    values.consent_recorded, values.consent_recorded, status, profile.id
+    values.living_situation, values.family_income, values.aspiration, values.support_note,
+    values.organizer_notes, values.consent_recorded, values.consent_recorded, status, profile.id
   );
   flash(req, 'success', 'Profile saved.');
   res.redirect(`/admin/profiles/${profile.id}/edit`);

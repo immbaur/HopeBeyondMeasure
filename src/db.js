@@ -20,6 +20,7 @@ db.exec(`
     date_of_birth TEXT,
     age_years INTEGER,
     location TEXT NOT NULL,
+    grade_level TEXT,
     living_situation TEXT,
     family_income TEXT,
     aspiration TEXT,
@@ -53,6 +54,9 @@ if (!hasColumn('support_note')) {
 }
 if (!hasColumn('organizer_notes')) {
   db.exec('ALTER TABLE profiles ADD COLUMN organizer_notes TEXT');
+}
+if (!hasColumn('grade_level')) {
+  db.exec('ALTER TABLE profiles ADD COLUMN grade_level TEXT');
 }
 
 /** Photos of a profile, cover first, then by manual order. */

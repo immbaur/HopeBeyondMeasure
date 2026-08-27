@@ -75,6 +75,7 @@ function profileFromForm(body) {
     date_of_birth: body.date_of_birth || null,
     age_years: body.age_years ? Number(body.age_years) : null,
     location: (body.location || '').trim(),
+    grade_level: (body.grade_level || '').trim() || null,
     living_situation: (body.living_situation || '').trim() || null,
     family_income: (body.family_income || '').trim() || null,
     aspiration: (body.aspiration || '').trim() || null,
@@ -128,12 +129,12 @@ router.post('/profiles', (req, res) => {
   const result = db
     .prepare(
       `INSERT INTO profiles
-        (name, date_of_birth, age_years, location, living_situation, family_income, aspiration,
-         support_note, organizer_notes, consent_recorded, consent_date)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CASE WHEN ? THEN datetime('now') ELSE NULL END)`
+        (name, date_of_birth, age_years, location, grade_level, living_situation, family_income,
+         aspiration, support_note, organizer_notes, consent_recorded, consent_date)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CASE WHEN ? THEN datetime('now') ELSE NULL END)`
     )
     .run(
-      values.name, values.date_of_birth, values.age_years, values.location,
+      values.name, values.date_of_birth, values.age_years, values.location, values.grade_level,
       values.living_situation, values.family_income, values.aspiration, values.support_note,
       values.organizer_notes, values.consent_recorded, values.consent_recorded
     );
@@ -177,7 +178,7 @@ router.post('/profiles/:id(\\d+)', (req, res) => {
   const status = values.consent_recorded ? profile.status : 'draft';
   db.prepare(
     `UPDATE profiles SET
-       name = ?, date_of_birth = ?, age_years = ?, location = ?, living_situation = ?,
+       name = ?, date_of_birth = ?, age_years = ?, location = ?, grade_level = ?, living_situation = ?,
        family_income = ?, aspiration = ?, support_note = ?, organizer_notes = ?, consent_recorded = ?,
        consent_date = CASE
          WHEN ? = 0 THEN NULL
@@ -186,7 +187,7 @@ router.post('/profiles/:id(\\d+)', (req, res) => {
        status = ?, updated_at = datetime('now')
      WHERE id = ?`
   ).run(
-    values.name, values.date_of_birth, values.age_years, values.location,
+    values.name, values.date_of_birth, values.age_years, values.location, values.grade_level,
     values.living_situation, values.family_income, values.aspiration, values.support_note,
     values.organizer_notes, values.consent_recorded, values.consent_recorded, status, profile.id
   );

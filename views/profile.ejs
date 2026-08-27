@@ -54,7 +54,7 @@
 
       <div class="profile-details">
         <h1><%= profile.name %><% if (age != null) { %>, <span class="age"><%= age %> years old</span><% } %></h1>
-        <p class="profile-location">📍 <%= profile.location %></p>
+        <p class="profile-location">📍 <%= profile.location %><% if (profile.grade_level) { %> · <%= profile.grade_level %><% } %></p>
 
         <% if (profile.aspiration) { %>
           <blockquote class="serif-quote profile-dream">
